@@ -1,5 +1,45 @@
+import matplotlib
 import pygame
+
 import algorithm
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+import matplotlib.backends.backend_agg as agg
+
+fig1 = plt.figure(figsize=[3, 3])
+ax1 = fig1.add_subplot(111)
+canvas1 = agg.FigureCanvasAgg(fig1)
+fig2 = plt.figure(figsize=[3, 3])
+ax2 = fig2.add_subplot(111)
+canvas2 = agg.FigureCanvasAgg(fig2)
+
+
+def plot(x):
+    ax2.clear()
+    ax2.plot(list(range(1, len(x)+1)), x)
+    canvas2.draw()
+    renderer = canvas2.get_renderer()
+
+    raw_data = renderer.tostring_rgb()
+    size = canvas2.get_width_height()
+
+    return pygame.image.fromstring(raw_data, size, "RGB")
+
+
+def hist(y):
+    ax1.clear()
+    ax1.hist(y, bins=20)
+    plt.gca().set(title="Fitness frequency", ylabel="Fitness")
+    canvas1.draw()
+    renderer = canvas1.get_renderer()
+
+    raw_data = renderer.tostring_rgb()
+    size = canvas1.get_width_height()
+
+    return pygame.image.fromstring(raw_data, size, "RGB")
+
 
 # initialize the pygame
 pygame.init()
@@ -49,38 +89,23 @@ rect4 = pygame.Rect(400, 400, 380, 380)
 generation_panel = (400, 400, 380, 380)
 
 # text
-font = pygame.font.Font('freesansbold.ttf', 32)
+font = pygame.font.Font('freesansbold.ttf', 16)
 
 
 def draw_text(s, pos):
-    text = font.render(s, True, (0, 255, 0))
-    textRect = text.get_rect()
-    textRect.center = pos
-    screen.blit(text, textRect)
+    text = font.render(s, True, (127, 0, 0))
+    screen.blit(text, pos)
 
 
-# draw graph
-def draw_graph(range_x, range_y, f, panel, div_x, div_y, scale_x, scale_y):
-    screen_origin = (panel[0] + 20, panel[1] + panel[3] - 20)
-    y_origin = screen_origin[1]
-    y_max = screen_origin[1] - panel[3] + 30
-    x_origin = screen_origin[0]
-    x_max = screen_origin[0] + panel[1] - 50
-    screen_scale_x = (x_max - x_origin) / (range_x[1] - range_x[0])
-    screen_scale_y = (y_max - y_origin) / (range_y[1] - range_y[0])
-    # y axis
-    pygame.draw.line(screen, (0, 0, 0), screen_origin, (x_origin, y_max))
-    # x axis
-    pygame.draw.line(screen, (0, 0, 0), screen_origin, (x_max, y_origin))
-    # label x axis
-    for i in range()
-
-
+generation_number = 0
+generation_distance = []
+best_fitness = None
+best_distance_all = None
 # Game Loop
 running = True
 while running:
     # background
-    screen.fill((255, 0, 0))
+    screen.fill((127, 0, 0))
     pygame.draw.rect(screen, (255, 255, 255), rect1)
     pygame.draw.rect(screen, (255, 255, 255), rect2)
     pygame.draw.rect(screen, (255, 255, 255), rect3)
@@ -95,22 +120,29 @@ while running:
                 # add a new city
                 new_city = algorithm.City(x, y)
                 tsp.add_city(new_city)
-                tsp.derive_population()
                 cities = tsp.cities
+                tsp.derive_population()
                 population = tsp.population
+                generation_number = 0
+                generation_distance.clear()
     if len(tsp.cities) >= 2 and count == len(population) - 1:
         tsp.calculate_fitness()
         tsp.make_generation()
         tsp.calculate_fitness()
         population = tsp.population
+        generation_number += 1
+        road = tsp.get_best_gene()
+        best_fitness = tsp.get_best_fitness()
+        if road:
+            best_road = road
+            best_distance = tsp.calculate_distance(tsp.get_best_gene())
+            generation_distance.append(best_distance)
+            best_distance_all = min(generation_distance)
 
     # display Best
     draw_cities(cities)
-    road = tsp.get_best_gene()
-    fitness = tsp.get_best_fitness()
-    if road:
-        best_road = road
     draw_roads(best_road, color=(0, 255, 0))
+    draw_text("Previous best", (best_panel[0], best_panel[1]))
 
     # display all population
     draw_cities(cities, offset=(update_panel[0], update_panel[1]))
@@ -118,8 +150,19 @@ while running:
         road = population[count]
         count = (count + 1) % len(population)
         draw_roads(road, color=(0, 0, 255), offset=(update_panel[0], update_panel[1]))
+        draw_text("Generation:" + str(generation_number), (update_panel[0], update_panel[1]))
 
-    # display population graph
-    draw_graph(None,None,None,population_panel)
+    # display graph
+    draw_text(" Frequency distribution  of parent fitness", (population_panel[0], population_panel[1]))
+    if len(cities) >= 2 and tsp.parent_fitness:
+        graph1 = hist(tsp.parent_fitness)
+        screen.blit(graph1, (population_panel[0] + 40, population_panel[1] + 40))
+
+    # display graph
+    draw_text("best distance (y) vs generation(x)", (generation_panel[0], generation_panel[1]))
+    if best_distance_all:
+        draw_text(" best Distance = " + str(best_distance_all), (generation_panel[0], generation_panel[1] + 18))
+    if len(cities) >= 2 and tsp.fitness:
+        graph2 = plot(generation_distance)
+        screen.blit(graph2, (generation_panel[0] + 40, generation_panel[1] + 40))
     pygame.display.update()
-    clock.tick(40)

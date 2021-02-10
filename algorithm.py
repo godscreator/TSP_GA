@@ -21,6 +21,8 @@ class TSP:
         self.population_size = population_size
         self.population = []
         self.fitness = []
+        self.current_distances = []
+        self.parent_fitness =[]
         self.initialize_population()
 
     def calculate_distances(self):
@@ -44,17 +46,26 @@ class TSP:
             random.shuffle(v)
             self.population.append(v)
 
+    def calculate_distance(self, order):
+        d = 0
+        for j in range(len(order)):
+            d += self.distance_matrix[order[j]][order[(j + 1) % len(order)]]
+        return d
+
     def calculate_fitness(self):
         fitness = []
         total_inverse_distances = []
+        self.current_distances = []
         for i in self.population:
             d = 0
             for j in range(len(i)):
                 d += self.distance_matrix[i[j]][i[(j + 1) % len(i)]]
+            self.current_distances.append(d)
             total_inverse_distances.append(1 / d)
         total_inverse_distance = sum(total_inverse_distances)
         for i in range(len(self.population)):
-            fitness.append(total_inverse_distances[i] / total_inverse_distance)
+            x = total_inverse_distances[i] / total_inverse_distance
+            fitness.append(x)
         self.fitness = fitness
 
     def add_city(self, new_city):
@@ -105,18 +116,24 @@ class TSP:
 
     def make_generation(self):
         new_population = []
+        self.parent_fitness = []
         for i in range(len(self.population)):
             parent_a = self.pick_one()
             parent_b = self.pick_one()
+            self.parent_fitness.append(self.calculate_distance(parent_a))
+            self.parent_fitness.append(self.calculate_distance(parent_b))
             child = TSP.crossover(parent_a, parent_b)
             TSP.mutate(child)
             new_population.append(child)
         self.population = new_population
 
-    def derive_population(self):
+    def derive_population(self, size = None):
         best_ever = self.get_best_gene()
         new_population = []
-        size = self.population_size
+        if size:
+            self.population_size = size
+        else:
+            size = self.population_size
         order_size = len(self.cities)
         if best_ever:
             for i in range(order_size - 1):
