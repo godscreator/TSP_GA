@@ -74,7 +74,6 @@ def draw_roads(order, offset=(0, 0), color=(255, 255, 255)):
             pygame.draw.line(screen, color, (a.x + offset[0], a.y + offset[1]), (b.x + offset[0], b.y + offset[1]))
 
 
-clock = pygame.time.Clock()
 tsp = algorithm.TSP(population_size=100)
 count = 0
 best_road = None

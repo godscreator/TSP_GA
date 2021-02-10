@@ -22,7 +22,7 @@ class TSP:
         self.population = []
         self.fitness = []
         self.current_distances = []
-        self.parent_fitness =[]
+        self.parent_fitness = []
         self.initialize_population()
 
     def calculate_distances(self):
@@ -61,7 +61,7 @@ class TSP:
             for j in range(len(i)):
                 d += self.distance_matrix[i[j]][i[(j + 1) % len(i)]]
             self.current_distances.append(d)
-            total_inverse_distances.append(1 / d)
+            total_inverse_distances.append(1 / (d * d))
         total_inverse_distance = sum(total_inverse_distances)
         for i in range(len(self.population)):
             x = total_inverse_distances[i] / total_inverse_distance
@@ -127,7 +127,7 @@ class TSP:
             new_population.append(child)
         self.population = new_population
 
-    def derive_population(self, size = None):
+    def derive_population(self, size=None):
         best_ever = self.get_best_gene()
         new_population = []
         if size:
@@ -154,14 +154,14 @@ class TSP:
 
     def get_best_gene(self):
         ind = self.get_best_index()
-        if ind:
+        if ind is not None:
             return self.population[ind]
         else:
             return None
 
     def get_best_fitness(self):
         ind = self.get_best_index()
-        if ind:
+        if ind is not None:
             return self.fitness[ind]
         else:
             return None
