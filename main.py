@@ -66,12 +66,14 @@ def draw_cities(cities, offset=(0, 0)):
 population = []
 
 
-def draw_roads(order, offset=(0, 0), color=(255, 255, 255)):
-    if order and len(order) >= 2:
-        for i in range(len(order)):
-            a = cities[order[i]]
-            b = cities[order[(i + 1) % len(order)]]
-            pygame.draw.line(screen, color, (a.x + offset[0], a.y + offset[1]), (b.x + offset[0], b.y + offset[1]))
+def draw_roads(road, offset=(0, 0), color=(255, 255, 255)):
+    if road:
+        order = road.order
+        if len(order) >= 2:
+            for i in range(len(order)):
+                a = cities[order[i]]
+                b = cities[order[(i + 1) % len(order)]]
+                pygame.draw.line(screen, color, (a.x + offset[0], a.y + offset[1]), (b.x + offset[0], b.y + offset[1]))
 
 
 tsp = algorithm.TSP(population_size=100)
@@ -118,13 +120,13 @@ while running:
             if best_panel[0] < x < best_panel[0] + best_panel[2] and best_panel[1] < y < best_panel[1] + best_panel[3]:
                 # add a new city
                 new_city = algorithm.City(x, y)
-                tsp.add_city(new_city)
-                cities = tsp.cities
+                algorithm.Path.add_city(new_city)
+                cities = algorithm.Path.cities
                 tsp.derive_population()
                 population = tsp.population
                 generation_number = 0
                 generation_distance.clear()
-    if len(tsp.cities) >= 2 and count == len(population) - 1:
+    if len(cities) >= 2 and count == len(population) - 1:
         tsp.calculate_fitness()
         tsp.make_generation()
         tsp.calculate_fitness()
@@ -134,7 +136,7 @@ while running:
         best_fitness = tsp.get_best_fitness()
         if road:
             best_road = road
-            best_distance = tsp.calculate_distance(tsp.get_best_gene())
+            best_distance = road.distance
             generation_distance.append(best_distance)
             best_distance_all = min(generation_distance)
 
@@ -149,7 +151,7 @@ while running:
         road = population[count]
         count = (count + 1) % len(population)
         draw_roads(road, color=(0, 0, 255), offset=(update_panel[0], update_panel[1]))
-        draw_text("Generation:" + str(generation_number), (update_panel[0], update_panel[1]))
+        draw_text(" Generation:" + str(generation_number)+" Count:" + str(count), (update_panel[0], update_panel[1]))
 
     # display graph
     draw_text(" Frequency distribution  of parent fitness", (population_panel[0], population_panel[1]))
@@ -158,7 +160,7 @@ while running:
         screen.blit(graph1, (population_panel[0] + 40, population_panel[1] + 40))
 
     # display graph
-    draw_text("best distance (y) vs generation(x)", (generation_panel[0], generation_panel[1]))
+    draw_text(" Best distance (y) vs generation(x)", (generation_panel[0], generation_panel[1]))
     if best_distance_all:
         draw_text(" best Distance = " + str(best_distance_all), (generation_panel[0], generation_panel[1] + 18))
     if len(cities) >= 2 and tsp.fitness:
