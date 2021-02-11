@@ -117,6 +117,7 @@ while running:
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
+            # if clicked inside best panel
             if best_panel[0] < x < best_panel[0] + best_panel[2] and best_panel[1] < y < best_panel[1] + best_panel[3]:
                 # add a new city
                 new_city = algorithm.City(x, y)
@@ -126,8 +127,10 @@ while running:
                 population = tsp.population
                 generation_number = 0
                 generation_distance.clear()
+                if len(cities) >= 2:
+                    tsp.calculate_fitness()
     if len(cities) >= 2 and count == len(population) - 1:
-        tsp.calculate_fitness()
+        # create next generation
         tsp.make_generation()
         tsp.calculate_fitness()
         population = tsp.population
