@@ -33,13 +33,12 @@ class Path:
     @classmethod
     def calculate_distances(cls):
         if len(cls.cities) > 0:
-            cls.distance_matrix = [[-1] * len(cls.cities) for i in range(len(cls.cities))]
+            cls.distance_matrix = [[-1] * len(cls.cities) for _ in range(len(cls.cities))]
             # calculate distance matrix
             for i in range(len(cls.cities)):
                 for j in range(len(cls.cities)):
                     if cls.distance_matrix[j][i] == -1:
-                        d = City.get_distance(cls.cities[i], cls.cities[j])
-                        cls.distance_matrix[i][j] = d
+                        cls.distance_matrix[i][j] = City.get_distance(cls.cities[i], cls.cities[j])
                     else:
                         cls.distance_matrix[i][j] = cls.distance_matrix[j][i]
 
@@ -52,6 +51,12 @@ class Path:
         if randomized:
             random.shuffle(self.order)
         self.distance = self.calculate_distance()
+
+    def __eq__(self, other):
+        if isinstance(other, Path):
+            return self.order == other.order
+        else:
+            return False
 
     def calculate_distance(self):
         d = 0
@@ -102,14 +107,19 @@ class TSP:
             v = Path(randomized=True)
             self.population.append(v)
 
-    def calculate_fitness(self):
+    def calculate_all_fitness(self):
         fitness = []
         total_inverse_distances = []
         self.current_distances = []
         for i in self.population:
             d = i.distance
             self.current_distances.append(d)
-            total_inverse_distances.append(1 / (d * d))
+        # fitness function 1/(d-d_min)
+        # d_min = min(self.current_distances)-1
+        # for i in self.population:
+        #     d = i.distance
+        #     total_inverse_distances.append(1/(d-d_min))
+            total_inverse_distances.append(1 / (d*d))
         total_inverse_distance = sum(total_inverse_distances)
         for i in range(len(self.population)):
             x = total_inverse_distances[i] / total_inverse_distance
