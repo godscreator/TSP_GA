@@ -44,12 +44,13 @@ class Path:
                         cls.distance_matrix[i][j] = cls.distance_matrix[j][i]
 
     # instance properties
-    def __init__(self, order=[], randomized=False):
-        self.order = order
+    def __init__(self, order=None, randomized=False):
+        if order is not None:
+            self.order = order
+        else:
+            self.order = list(range(len(Path.cities)))
         if randomized:
-            v = list(range(len(Path.cities)))
-            random.shuffle(v)
-            self.order = v
+            random.shuffle(self.order)
         self.distance = self.calculate_distance()
 
     def calculate_distance(self):
